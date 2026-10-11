@@ -1,0 +1,73 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: n8n
+  annotations:
+    run.googleapis.com/launch-stage: BETA
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/maxScale: '1'
+        autoscaling.knative.dev/minScale: '0'
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 3600
+      containers:
+        - image: n8nio/n8n:2.42.6
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 2Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          volumeMounts:
+            - name: n8n-storage
+              mountPath: /home/node/.n8n
+          env:
+            - name: N8N_PORT
+              value: "8080"
+            - name: N8N_PROTOCOL
+              value: "https"
+            - name: GENERIC_TIMEZONE
+              value: "Asia/Ho_Chi_Minh"
+            - name: EXECUTIONS_MODE
+              value: "regular"
+            - name: EXECUTIONS_DATA_PRUNE
+              value: "true"
+            - name: EXECUTIONS_DATA_MAX_AGE
+              value: "168"
+            - name: N8N_PAYLOAD_SIZE_MAX
+              value: "50"
+            - name: N8N_UNVERIFIED_PACKAGES_ENABLED
+              value: "true"
+            - name: N8N_RUNNERS_TASK_TIMEOUT
+              value: "300"
+            - name: N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES
+              value: "2147483648"
+            - name: N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES
+              value: "5000"
+            - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+              value: "true"
+            - name: N8N_INSTANCE_AI_MODEL
+              value: "gemini-3.7-flash"
+            - name: N8N_INSTANCE_AI_MODEL_URL
+              value: "https://generativelanguage.googleapis.com/v1beta/openai/"
+            - name: N8N_INSTANCE_AI_MODEL_API_KEY
+              value: "${GEMINI_API_KEY}"
+            - name: N8N_INSTANCE_AI_SEARXNG_URL
+              value: "${SEARXNG_URL}"
+            - name: WEBHOOK_URL
+              value: "${WEBHOOK_URL}"
+            - name: N8N_EDITOR_BASE_URL
+              value: "${N8N_EDITOR_BASE_URL}"
+      volumes:
+        - name: n8n-storage
+          csi:
+            driver: gcsfuse.run.googleapis.com
+            volumeAttributes:
+              bucketName: ${N8N_BUCKET_NAME}

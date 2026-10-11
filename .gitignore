@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+*.key
+*.json
+!package.json
+secrets/
+.terraform/
+*.tfstate
+*.tfstate.*
