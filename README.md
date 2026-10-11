@@ -28,34 +28,26 @@ Kiến trúc triển khai n8n và SearXNG siêu nhẹ trên Google Cloud Run Gen
 - `N8N_INSTANCE_AI_MODEL`: gemini-3.7-flash
 - `N8N_INSTANCE_AI_MODEL_URL`: https://generativelanguage.googleapis.com/v1beta/openai/
 
-## Hướng dẫn triển khai
+## CI/CD Pipeline (GitHub Actions)
 
-### Bước 1: Xác thực GCP trong WSL
+Pipeline tự động kích hoạt khi push code vào nhánh `main` hoặc chạy thủ công qua workflow dispatch:
 
-Chạy lệnh xác thực tài khoản Google Cloud:
+Workflow file: `.github/workflows/deploy.yml`
 
-```bash
-gcloud auth login
-gcloud auth application-default login
-```
+### Cấu hình Secrets và Variables trên GitHub Repository
 
-Hoặc nếu dùng Access Token:
+1. **Repository Secrets** (Settings -> Secrets and variables -> Actions):
+   - `GCP_SA_KEY`: Nội dung file Service Account JSON (tạo bằng script `scripts/setup-github-sa.sh`)
+   - `GEMINI_API_KEY`: API Key của Gemini
+2. **Repository Variables**:
+   - `GCP_PROJECT_ID`: ID của GCP Project (`mgmt-apps` hoặc mã project)
+   - `GCP_REGION`: Region triển khai (mặc định: `asia-southeast1`)
 
-```bash
-gcloud config set auth/access_token_file /path/to/token
-```
-
-### Bước 2: Tạo project mgmt-apps và kích hoạt API
+### Tạo Service Account cho GitHub Actions trên GCP
 
 ```bash
 chmod +x scripts/*.sh
-./scripts/create-project.sh mgmt-apps
+./scripts/setup-github-sa.sh <PROJECT_ID>
 ```
 
-### Bước 3: Triển khai n8n và SearXNG
-
-```bash
-export GEMINI_API_KEY="your-gemini-api-key"
-export REGION="asia-southeast1"
-./scripts/deploy-all.sh
-```
+Script sẽ tự động phân quyền các roles cần thiết và xuất ra file `gcp-sa-key.json` để bạn dán vào secret `GCP_SA_KEY`.
