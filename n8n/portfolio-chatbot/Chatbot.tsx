@@ -327,31 +327,61 @@ const extractLinksFromContent = (content: string): ExtractedLink[] => {
             );
           }
 
+          const screenshotUrl = `https://s0.wp.com/mshots/v1/${encodeURIComponent(link.url)}?w=600&h=340`;
+          const faviconUrl = `https://www.google.com/s2/favicons?domain=${link.domain}&sz=64`;
+
           return (
             <a
               key={idx}
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-200/90 dark:border-slate-700/90 bg-white/80 dark:bg-slate-900/80 hover:border-sky-400 dark:hover:border-sky-500 transition-all hover:shadow-xs"
+              className="group block rounded-xl overflow-hidden border border-slate-200/90 dark:border-slate-700/90 bg-white/80 dark:bg-slate-900/80 hover:border-sky-400 dark:hover:border-sky-500 transition-all hover:shadow-md"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-lg bg-sky-500/10 dark:bg-sky-400/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
-                  <Globe className="w-4 h-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400">
-                    {link.label}
-                  </p>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                    {link.domain}
-                  </p>
+              <div className="relative aspect-video w-full bg-slate-100 dark:bg-slate-800/80 overflow-hidden border-b border-slate-200/60 dark:border-slate-700/60">
+                <img
+                  src={screenshotUrl}
+                  alt={link.label}
+                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
+                  onError={(e) => {
+                    const parent = (e.target as HTMLElement).parentElement;
+                    if (parent) parent.style.display = "none";
+                  }}
+                />
+                <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-[10px] font-medium text-white flex items-center gap-1.5 shadow-xs">
+                  <Globe className="w-3 h-3 text-sky-400" />
+                  Website
                 </div>
               </div>
-              <span className="shrink-0 text-[11px] font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1 group-hover:underline">
-                Open
-                <ExternalLink className="w-3 h-3" />
-              </span>
+
+              <div className="p-2.5 flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200/50 dark:border-slate-700/50">
+                    <img
+                      src={faviconUrl}
+                      alt={link.domain}
+                      className="w-4 h-4 object-contain"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400">
+                      {link.label}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                      {link.domain}
+                    </p>
+                  </div>
+                </div>
+                <span className="shrink-0 text-[11px] font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1 group-hover:underline">
+                  Open
+                  <ExternalLink className="w-3 h-3" />
+                </span>
+              </div>
             </a>
           );
         })}
