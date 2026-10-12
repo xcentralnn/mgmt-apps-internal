@@ -137,10 +137,15 @@ async function restoreState() {
   if (restoredDb) {
     console.log('Found existing database dump. Restoring into PostgreSQL...');
     try {
+      execSync('chown postgres:postgres /tmp/listmonk-db.dump 2>/dev/null || true');
       execSync('su - postgres -c "dropdb --if-exists -U postgres listmonk && createdb -O listmonk listmonk"');
       execSync(`su - postgres -c "pg_restore -U listmonk -d listmonk ${DUMP_PATH}"`);
       console.log('Database restored successfully. Checking for migrations...');
       execSync('./listmonk --upgrade --yes', { env: process.env });
+
+      const adminPass = process.env.LISTMONK_ADMIN_PASSWORD || '123@@SLongg';
+      execSync(`su - postgres -c "psql -U listmonk -d listmonk -c \\"UPDATE users SET password=CRYPT('${adminPass}', GEN_SALT('bf')) WHERE username='admin';\\""`);
+      execSync('su - postgres -c "psql -U listmonk -d listmonk -c \\"UPDATE settings SET value=\'\\\\\\"https://listmonk.curator.io.vn\\\\\\"\' WHERE key=\'app.root_url\';\\""');
     } catch (err) {
       console.error('Error during database restore:', err.message);
     }
@@ -151,9 +156,10 @@ async function restoreState() {
         env: {
           ...process.env,
           LISTMONK_ADMIN_USER: process.env.LISTMONK_ADMIN_USER || 'admin',
-          LISTMONK_ADMIN_PASSWORD: process.env.LISTMONK_ADMIN_PASSWORD || 'adminpassword'
+          LISTMONK_ADMIN_PASSWORD: process.env.LISTMONK_ADMIN_PASSWORD || '123@@SLongg'
         }
       });
+      execSync('su - postgres -c "psql -U listmonk -d listmonk -c \\"UPDATE settings SET value=\'\\\\\\"https://listmonk.curator.io.vn\\\\\\"\' WHERE key=\'app.root_url\';\\""');
       console.log('Listmonk initial schema created.');
     } catch (err) {
       console.error('Error installing Listmonk schema:', err.message);
@@ -177,6 +183,7 @@ async function restoreState() {
 
 async function saveState() {
   try {
+    execSync('rm -f /tmp/listmonk-db.dump');
     execSync(`su - postgres -c "pg_dump -U listmonk -Fc -f ${DUMP_PATH} listmonk"`);
     await uploadGcsFile('listmonk-db.dump', DUMP_PATH, 'application/octet-stream');
   } catch (err) {

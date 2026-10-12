@@ -1,7 +1,7 @@
 [app]
 address = "0.0.0.0:8080"
 admin_username = "admin"
-admin_password = "adminpassword"
+admin_password = "123@@SLongg"
 concurrency = 1
 message_rate = 10
 batch_size = 100

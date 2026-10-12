@@ -95,7 +95,7 @@ gcloud run deploy listmonk \
   --no-cpu-throttling \
   --session-affinity \
   --timeout=3600 \
-  --set-env-vars="LISTMONK_BUCKET_NAME=${BUCKET_NAME},LISTMONK_ADMIN_USER=admin,LISTMONK_ADMIN_PASSWORD=adminpassword,LISTMONK_app__address=0.0.0.0:8080,LISTMONK_db__host=localhost,LISTMONK_db__port=5432,LISTMONK_db__user=listmonk,LISTMONK_db__password=listmonk,LISTMONK_db__database=listmonk,LISTMONK_db__ssl_mode=disable"
+  --set-env-vars="LISTMONK_BUCKET_NAME=${BUCKET_NAME},LISTMONK_ADMIN_USER=admin,LISTMONK_ADMIN_PASSWORD=123@@SLongg,LISTMONK_app__address=0.0.0.0:8080,LISTMONK_db__host=localhost,LISTMONK_db__port=5432,LISTMONK_db__user=listmonk,LISTMONK_db__password=listmonk,LISTMONK_db__database=listmonk,LISTMONK_db__ssl_mode=disable"
 
 LISTMONK_URL=$(gcloud run services describe listmonk --region="${REGION}" --format="value(status.url)")
 
