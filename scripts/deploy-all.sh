@@ -62,7 +62,7 @@ gcloud run deploy n8n \
   --clear-volume-mounts \
   --port=8080 \
   --cpu=1 \
-  --memory=512Mi \
+  --memory=1Gi \
   --min-instances=0 \
   --max-instances=1 \
   --no-cpu-throttling \
