@@ -37,7 +37,7 @@ spec:
             - name: N8N_PROTOCOL
               value: "https"
             - name: N8N_PUSH_BACKEND
-              value: "websocket"
+              value: "sse"
             - name: N8N_PROXY_HOPS
               value: "1"
             - name: GENERIC_TIMEZONE
