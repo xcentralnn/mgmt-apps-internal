@@ -1,7 +1,0 @@
-steps:
-  - name: 'gcr.io/kaniko-project/executor:latest'
-    args:
-      - '--destination=gcr.io/$PROJECT_ID/sms-mock:latest'
-      - '--cache=true'
-      - '--dockerfile=sms-mock/Dockerfile'
-      - '--context=dir://sms-mock'

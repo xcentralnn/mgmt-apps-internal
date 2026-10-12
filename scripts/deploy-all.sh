@@ -79,23 +79,7 @@ gcloud run services update n8n \
   --region="${REGION}" \
   --update-env-vars="N8N_HOST=n8n.curator.io.vn,WEBHOOK_URL=${N8N_PUBLIC_URL},N8N_WEBHOOK_URL=${N8N_PUBLIC_URL},N8N_EDITOR_BASE_URL=${N8N_PUBLIC_URL},N8N_INSTANCE_AI_SEARXNG_URL=${SEARXNG_PUBLIC_URL}"
 
-echo "Step 5: Building and deploying SMS Mock Server..."
-gcloud builds submit --config=sms-mock/cloudbuild.yaml .
-
-gcloud run deploy sms-mock \
-  --image="gcr.io/${PROJECT_ID}/sms-mock:latest" \
-  --region="${REGION}" \
-  --platform=managed \
-  --allow-unauthenticated \
-  --port=8080 \
-  --memory=256Mi \
-  --cpu=0.25 \
-  --min-instances=0 \
-  --max-instances=2
-
-SMS_MOCK_URL=$(gcloud run services describe sms-mock --region="${REGION}" --format="value(status.url)")
-
-echo "Step 6: Building and deploying Listmonk (Email & SMS Server)..."
+echo "Step 5: Building and deploying Listmonk (Email & SMS Server)..."
 gcloud builds submit --config=listmonk/cloudbuild.yaml .
 
 gcloud run deploy listmonk \
@@ -118,6 +102,6 @@ LISTMONK_URL=$(gcloud run services describe listmonk --region="${REGION}" --form
 echo "Deployment finished successfully."
 echo "n8n URL: ${N8N_URL}"
 echo "SearXNG URL: ${SEARXNG_URL}"
-echo "SMS Mock URL: ${SMS_MOCK_URL}"
 echo "Listmonk URL: ${LISTMONK_URL}"
+
 
