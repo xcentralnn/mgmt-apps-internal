@@ -147,15 +147,22 @@ export const ChatWidget: React.FC = () => {
   const renderFormattedContent = (content: string) => {
     const lines = content.split("\n");
     return lines.map((line, idx) => {
-      if (line.startsWith("### ")) {
-        return <h4 key={idx} className="font-bold text-sm text-slate-900 dark:text-white mt-2 mb-1">{line.replace("### ", "")}</h4>;
+      const trimmed = line.trim();
+      if (trimmed === "---" || trimmed === "***") {
+        return <hr key={idx} className="my-2 border-slate-200 dark:border-slate-700" />;
       }
-      if (line.startsWith("- ") || line.startsWith("* ")) {
+      if (trimmed.startsWith("### ")) {
+        return <h4 key={idx} className="font-bold text-sm text-slate-900 dark:text-white mt-2 mb-1">{trimmed.replace("### ", "")}</h4>;
+      }
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
         return (
           <li key={idx} className="ml-4 list-disc text-xs text-slate-700 dark:text-slate-300 my-0.5">
-            {line.substring(2)}
+            {trimmed.substring(2)}
           </li>
         );
+      }
+      if (!trimmed) {
+        return <div key={idx} className="h-1.5" />;
       }
       return (
         <p key={idx} className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed my-1">
