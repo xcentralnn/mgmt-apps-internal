@@ -4,6 +4,7 @@
 *.key
 *.json
 !package.json
+!n8n/workflows/*.json
 secrets/
 .terraform/
 *.tfstate
