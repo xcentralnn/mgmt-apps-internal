@@ -33,6 +33,8 @@ spec:
               value: "8080"
             - name: N8N_PROTOCOL
               value: "https"
+            - name: N8N_PUSH_BACKEND
+              value: "sse"
             - name: GENERIC_TIMEZONE
               value: "Asia/Ho_Chi_Minh"
             - name: EXECUTIONS_MODE
