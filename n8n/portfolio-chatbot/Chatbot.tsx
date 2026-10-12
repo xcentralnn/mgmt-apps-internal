@@ -9,7 +9,10 @@ import {
   User, 
   Loader2, 
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  Globe,
+  Play,
+  Link2
 } from "lucide-react";
 
 interface Message {
@@ -145,6 +148,53 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
+interface ExtractedLink {
+  url: string;
+  label: string;
+  youtubeId: string | null;
+  domain: string;
+}
+
+const extractYouTubeId = (url: string): string | null => {
+  const regExp = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+};
+
+const extractLinksFromContent = (content: string): ExtractedLink[] => {
+  const linkRegex = /(?:!\[([^\]]*)\]\((https?:\/\/[^\s\)]+)\)|\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)|<a\s+[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>(.*?)<\/a>|(https?:\/\/[^\s<]+))/gi;
+  const links: ExtractedLink[] = [];
+  const seenUrls = new Set<string>();
+  let match: RegExpExecArray | null;
+
+  while ((match = linkRegex.exec(content)) !== null) {
+    if (match[1] !== undefined && match[2] !== undefined) {
+      continue;
+    }
+    const rawUrl = match[4] || match[5] || match[7];
+    if (!rawUrl || seenUrls.has(rawUrl)) continue;
+    seenUrls.add(rawUrl);
+
+    let domain = "";
+    try {
+      domain = new URL(rawUrl).hostname.replace(/^www\./, "");
+    } catch {
+      domain = rawUrl;
+    }
+
+    const label = match[3] || match[6] || domain;
+    const youtubeId = extractYouTubeId(rawUrl);
+
+    links.push({
+      url: rawUrl,
+      label,
+      youtubeId,
+      domain
+    });
+  }
+  return links;
+};
+
   const renderTextWithFormatting = (text: string, keyPrefix: string) => {
     const boldRegex = /\*\*([^*]+)\*\*/g;
     const parts: React.ReactNode[] = [];
@@ -169,34 +219,48 @@ export const ChatWidget: React.FC = () => {
   };
 
   const renderInlineContent = (text: string) => {
-    const linkRegex = /(?:\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)|<a\s+[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>(.*?)<\/a>|(https?:\/\/[^\s<]+))/gi;
+    const contentRegex = /(?:!\[([^\]]*)\]\((https?:\/\/[^\s\)]+)\)|\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)|<a\s+[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>(.*?)<\/a>|(https?:\/\/[^\s<]+))/gi;
     const elements: React.ReactNode[] = [];
     let lastIndex = 0;
     let match: RegExpExecArray | null;
 
-    while ((match = linkRegex.exec(text)) !== null) {
+    while ((match = contentRegex.exec(text)) !== null) {
       if (match.index > lastIndex) {
         elements.push(renderTextWithFormatting(text.substring(lastIndex, match.index), `txt-${lastIndex}`));
       }
 
-      const label = match[1] || match[4] || match[5];
-      const url = match[2] || match[3] || match[5];
+      if (match[1] !== undefined && match[2] !== undefined) {
+        const alt = match[1];
+        const imgUrl = match[2];
+        elements.push(
+          <img
+            key={`img-${match.index}`}
+            src={imgUrl}
+            alt={alt || "Thumbnail"}
+            className="rounded-xl my-2 max-w-full max-h-52 object-cover border border-slate-200 dark:border-slate-700 shadow-sm"
+            loading="lazy"
+          />
+        );
+      } else {
+        const label = match[3] || match[6] || match[7];
+        const url = match[4] || match[5] || match[7];
 
-      elements.push(
-        <a
-          key={`link-${match.index}`}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400 underline underline-offset-2 hover:text-sky-700 dark:hover:text-sky-300 hover:decoration-sky-500 transition-all bg-sky-500/10 dark:bg-sky-400/10 px-1.5 py-0.5 rounded-md mx-0.5 my-0.5 break-all cursor-pointer shadow-xs group"
-          title={`Mở liên kết trong tab mới: ${url}`}
-        >
-          <span className="group-hover:underline">{label}</span>
-          <ExternalLink className="w-3 h-3 inline-block shrink-0 stroke-[2.2] opacity-80 group-hover:opacity-100 transition-opacity" />
-        </a>
-      );
+        elements.push(
+          <a
+            key={`link-${match.index}`}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400 underline underline-offset-2 hover:text-sky-700 dark:hover:text-sky-300 hover:decoration-sky-500 transition-all bg-sky-500/10 dark:bg-sky-400/10 px-1.5 py-0.5 rounded-md mx-0.5 my-0.5 break-all cursor-pointer shadow-xs group"
+            title={`Mở liên kết trong tab mới: ${url}`}
+          >
+            <span className="group-hover:underline">{label}</span>
+            <ExternalLink className="w-3 h-3 inline-block stroke-[2.2] opacity-80 group-hover:opacity-100 transition-opacity" />
+          </a>
+        );
+      }
 
-      lastIndex = linkRegex.lastIndex;
+      lastIndex = contentRegex.lastIndex;
     }
 
     if (lastIndex < text.length) {
@@ -204,6 +268,95 @@ export const ChatWidget: React.FC = () => {
     }
 
     return elements;
+  };
+
+  const renderLinkPreviews = (links: ExtractedLink[]) => {
+    if (links.length === 0) return null;
+
+    return (
+      <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-slate-700/60 flex flex-col gap-2">
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wider uppercase">
+          <Link2 className="w-3 h-3 text-sky-500" />
+          <span>LINK PREVIEW ({links.length})</span>
+        </div>
+
+        {links.map((link, idx) => {
+          if (link.youtubeId) {
+            const thumbUrl = `https://img.youtube.com/vi/${link.youtubeId}/hqdefault.jpg`;
+            return (
+              <a
+                key={idx}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group block rounded-xl overflow-hidden border border-slate-200/90 dark:border-slate-700/90 bg-white/80 dark:bg-slate-900/80 hover:border-sky-400 dark:hover:border-sky-500 transition-all hover:shadow-md"
+              >
+                <div className="relative aspect-video w-full bg-slate-950 overflow-hidden">
+                  <img
+                    src={thumbUrl}
+                    alt={link.label}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg group-hover:scale-110 group-hover:bg-red-500 transition-all">
+                      <Play className="w-4 h-4 fill-white ml-0.5" />
+                    </div>
+                  </div>
+                  <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-md text-[10px] font-medium text-white flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    YouTube
+                  </div>
+                </div>
+
+                <div className="p-2.5 flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 line-clamp-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">
+                      {link.label}
+                    </p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      youtube.com
+                    </p>
+                  </div>
+                  <span className="shrink-0 text-[11px] font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1 group-hover:underline">
+                    Open
+                    <ExternalLink className="w-3 h-3" />
+                  </span>
+                </div>
+              </a>
+            );
+          }
+
+          return (
+            <a
+              key={idx}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-200/90 dark:border-slate-700/90 bg-white/80 dark:bg-slate-900/80 hover:border-sky-400 dark:hover:border-sky-500 transition-all hover:shadow-xs"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/10 dark:bg-sky-400/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate group-hover:text-sky-600 dark:group-hover:text-sky-400">
+                    {link.label}
+                  </p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                    {link.domain}
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 text-[11px] font-semibold text-sky-600 dark:text-sky-400 flex items-center gap-1 group-hover:underline">
+                Open
+                <ExternalLink className="w-3 h-3" />
+              </span>
+            </a>
+          );
+        })}
+      </div>
+    );
   };
 
   const renderFormattedContent = (content: string) => {
@@ -378,7 +531,10 @@ export const ChatWidget: React.FC = () => {
                       {msg.role === "user" ? (
                         <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                       ) : (
-                        renderFormattedContent(msg.content)
+                        <>
+                          {renderFormattedContent(msg.content)}
+                          {renderLinkPreviews(extractLinksFromContent(msg.content))}
+                        </>
                       )}
                       <div
                         className={`text-[9px] mt-1 text-right ${
