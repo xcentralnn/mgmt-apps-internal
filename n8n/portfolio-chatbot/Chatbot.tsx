@@ -8,7 +8,8 @@ import {
   RotateCcw, 
   User, 
   Loader2, 
-  ChevronDown
+  ChevronDown,
+  ExternalLink
 } from "lucide-react";
 
 interface Message {
@@ -144,6 +145,67 @@ export const ChatWidget: React.FC = () => {
     }
   };
 
+  const renderTextWithFormatting = (text: string, keyPrefix: string) => {
+    const boldRegex = /\*\*([^*]+)\*\*/g;
+    const parts: React.ReactNode[] = [];
+    let lastIdx = 0;
+    let bMatch: RegExpExecArray | null;
+
+    while ((bMatch = boldRegex.exec(text)) !== null) {
+      if (bMatch.index > lastIdx) {
+        parts.push(text.substring(lastIdx, bMatch.index));
+      }
+      parts.push(
+        <strong key={`${keyPrefix}-b-${bMatch.index}`} className="font-semibold text-slate-900 dark:text-white">
+          {bMatch[1]}
+        </strong>
+      );
+      lastIdx = boldRegex.lastIndex;
+    }
+    if (lastIdx < text.length) {
+      parts.push(text.substring(lastIdx));
+    }
+    return <React.Fragment key={keyPrefix}>{parts}</React.Fragment>;
+  };
+
+  const renderInlineContent = (text: string) => {
+    const linkRegex = /(?:\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)|<a\s+[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>(.*?)<\/a>|(https?:\/\/[^\s<]+))/gi;
+    const elements: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = linkRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        elements.push(renderTextWithFormatting(text.substring(lastIndex, match.index), `txt-${lastIndex}`));
+      }
+
+      const label = match[1] || match[4] || match[5];
+      const url = match[2] || match[3] || match[5];
+
+      elements.push(
+        <a
+          key={`link-${match.index}`}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 font-semibold text-sky-600 dark:text-sky-400 underline underline-offset-2 hover:text-sky-700 dark:hover:text-sky-300 hover:decoration-sky-500 transition-all bg-sky-500/10 dark:bg-sky-400/10 px-1.5 py-0.5 rounded-md mx-0.5 my-0.5 break-all cursor-pointer shadow-xs group"
+          title={`Mở liên kết trong tab mới: ${url}`}
+        >
+          <span className="group-hover:underline">{label}</span>
+          <ExternalLink className="w-3 h-3 inline-block shrink-0 stroke-[2.2] opacity-80 group-hover:opacity-100 transition-opacity" />
+        </a>
+      );
+
+      lastIndex = linkRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      elements.push(renderTextWithFormatting(text.substring(lastIndex), `txt-${lastIndex}`));
+    }
+
+    return elements;
+  };
+
   const renderFormattedContent = (content: string) => {
     const lines = content.split("\n");
     return lines.map((line, idx) => {
@@ -152,12 +214,16 @@ export const ChatWidget: React.FC = () => {
         return <hr key={idx} className="my-2 border-slate-200 dark:border-slate-700" />;
       }
       if (trimmed.startsWith("### ")) {
-        return <h4 key={idx} className="font-bold text-sm text-slate-900 dark:text-white mt-2 mb-1">{trimmed.replace("### ", "")}</h4>;
+        return (
+          <h4 key={idx} className="font-bold text-sm text-slate-900 dark:text-white mt-2 mb-1">
+            {renderInlineContent(trimmed.replace("### ", ""))}
+          </h4>
+        );
       }
       if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
         return (
           <li key={idx} className="ml-4 list-disc text-xs text-slate-700 dark:text-slate-300 my-0.5">
-            {trimmed.substring(2)}
+            {renderInlineContent(trimmed.substring(2))}
           </li>
         );
       }
@@ -166,7 +232,7 @@ export const ChatWidget: React.FC = () => {
       }
       return (
         <p key={idx} className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed my-1">
-          {line}
+          {renderInlineContent(line)}
         </p>
       );
     });
