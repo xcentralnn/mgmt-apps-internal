@@ -405,7 +405,7 @@ const extractLinksFromContent = (content: string): ExtractedLink[] => {
       }
       if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
         return (
-          <li key={idx} className="ml-4 list-disc text-xs text-slate-700 dark:text-slate-300 my-0.5">
+          <li key={idx} className="ml-4 list-disc text-[13.5px] text-slate-800 dark:text-slate-200 leading-relaxed my-1">
             {renderInlineContent(trimmed.substring(2))}
           </li>
         );
@@ -414,7 +414,7 @@ const extractLinksFromContent = (content: string): ExtractedLink[] => {
         return <div key={idx} className="h-1.5" />;
       }
       return (
-        <p key={idx} className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed my-1">
+        <p key={idx} className="text-[13.5px] text-slate-800 dark:text-slate-100 leading-relaxed my-1.5">
           {renderInlineContent(line)}
         </p>
       );
@@ -477,8 +477,14 @@ const extractLinksFromContent = (content: string): ExtractedLink[] => {
             {/* Header */}
             <div className="px-5 py-4 bg-slate-50/80 dark:bg-slate-800/50 border-b border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
-                  <Bot className="w-5 h-5" />
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/25 ring-2 ring-sky-400/30">
+                    <Sparkles className="w-5 h-5 text-sky-100 animate-pulse" />
+                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
+                  </span>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -546,13 +552,13 @@ const extractLinksFromContent = (content: string): ExtractedLink[] => {
                     className={`flex gap-2.5 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     {msg.role === "assistant" && (
-                      <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex-shrink-0 flex items-center justify-center text-white mt-1">
-                        <Bot className="w-4 h-4" />
+                      <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-violet-600 flex-shrink-0 flex items-center justify-center text-white shadow-sm ring-1 ring-sky-400/30 mt-1">
+                        <Sparkles className="w-3.5 h-3.5 text-sky-100" />
                       </div>
                     )}
 
                     <div
-                      className={`max-w-[82%] rounded-2xl px-3.5 py-2.5 text-xs ${
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-[13.5px] ${
                         msg.role === "user"
                           ? "bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-br-none shadow-sm"
                           : "bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200/60 dark:border-slate-700/60 rounded-bl-none shadow-sm"
@@ -586,8 +592,8 @@ const extractLinksFromContent = (content: string): ExtractedLink[] => {
 
               {isLoading && (
                 <div className="flex gap-2.5 items-start">
-                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex-shrink-0 flex items-center justify-center text-white mt-1">
-                    <Bot className="w-4 h-4" />
+                  <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-violet-600 flex-shrink-0 flex items-center justify-center text-white shadow-sm ring-1 ring-sky-400/30 mt-1">
+                    <Sparkles className="w-3.5 h-3.5 text-sky-100" />
                   </div>
                   <div className="bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 rounded-2xl rounded-bl-none px-4 py-3 flex flex-col gap-1.5 shadow-sm">
                     <div className="flex items-center gap-2">
