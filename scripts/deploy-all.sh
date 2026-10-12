@@ -65,7 +65,7 @@ gcloud run deploy n8n \
   --memory=1Gi \
   --min-instances=0 \
   --max-instances=1 \
-  --no-cpu-throttling \
+  --cpu-throttling \
   --session-affinity \
   --timeout=3600 \
   --set-env-vars="N8N_BUCKET_NAME=${BUCKET_NAME},N8N_PORT=8080,N8N_HOST=n8n.curator.io.vn,N8N_PROTOCOL=https,N8N_PUSH_BACKEND=sse,N8N_PROXY_HOPS=1,GENERIC_TIMEZONE=Asia/Ho_Chi_Minh,EXECUTIONS_MODE=regular,EXECUTIONS_DATA_PRUNE=true,EXECUTIONS_DATA_MAX_AGE=168,N8N_PAYLOAD_SIZE_MAX=50,N8N_UNVERIFIED_PACKAGES_ENABLED=true,N8N_RUNNERS_TASK_TIMEOUT=300,N8N_COMPRESSION_NODE_MAX_DECOMPRESSED_SIZE_BYTES=2147483648,N8N_COMPRESSION_NODE_MAX_ZIP_ENTRIES=5000,N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=false,N8N_INSTANCE_AI_MODEL=gemini-3.7-flash,N8N_INSTANCE_AI_MODEL_URL=https://generativelanguage.googleapis.com/v1beta/openai/,N8N_INSTANCE_AI_MODEL_API_KEY=${GEMINI_API_KEY},N8N_INSTANCE_AI_SEARXNG_URL=${SEARXNG_URL}"
@@ -79,29 +79,8 @@ gcloud run services update n8n \
   --region="${REGION}" \
   --update-env-vars="N8N_HOST=n8n.curator.io.vn,WEBHOOK_URL=${N8N_PUBLIC_URL},N8N_WEBHOOK_URL=${N8N_PUBLIC_URL},N8N_EDITOR_BASE_URL=${N8N_PUBLIC_URL},N8N_INSTANCE_AI_SEARXNG_URL=${SEARXNG_PUBLIC_URL}"
 
-echo "Step 5: Building and deploying Listmonk (Email & SMS Server)..."
-gcloud builds submit --config=listmonk/cloudbuild.yaml .
-
-gcloud run deploy listmonk \
-  --image="gcr.io/${PROJECT_ID}/listmonk:latest" \
-  --region="${REGION}" \
-  --platform=managed \
-  --allow-unauthenticated \
-  --port=8080 \
-  --memory=512Mi \
-  --cpu=1 \
-  --min-instances=0 \
-  --max-instances=1 \
-  --no-cpu-throttling \
-  --session-affinity \
-  --timeout=3600 \
-  --set-env-vars="LISTMONK_BUCKET_NAME=${BUCKET_NAME},LISTMONK_ADMIN_USER=admin,LISTMONK_ADMIN_PASSWORD=123@@SLongg,LISTMONK_app__address=0.0.0.0:8080,LISTMONK_db__host=localhost,LISTMONK_db__port=5432,LISTMONK_db__user=listmonk,LISTMONK_db__password=listmonk,LISTMONK_db__database=listmonk,LISTMONK_db__ssl_mode=disable"
-
-LISTMONK_URL=$(gcloud run services describe listmonk --region="${REGION}" --format="value(status.url)")
-
 echo "Deployment finished successfully."
 echo "n8n URL: ${N8N_URL}"
 echo "SearXNG URL: ${SEARXNG_URL}"
-echo "Listmonk URL: ${LISTMONK_URL}"
 
 
