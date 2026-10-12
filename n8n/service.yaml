@@ -32,12 +32,14 @@ spec:
           env:
             - name: N8N_PORT
               value: "8080"
+            - name: N8N_HOST
+              value: "n8n.curator.io.vn"
             - name: N8N_PROTOCOL
               value: "https"
             - name: N8N_PUSH_BACKEND
-              value: "sse"
+              value: "websocket"
             - name: N8N_PROXY_HOPS
-              value: "2"
+              value: "1"
             - name: GENERIC_TIMEZONE
               value: "Asia/Ho_Chi_Minh"
             - name: EXECUTIONS_MODE
