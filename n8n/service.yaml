@@ -21,10 +21,10 @@ spec:
           resources:
             limits:
               cpu: 1000m
-              memory: 2Gi
+              memory: 512Mi
             requests:
               cpu: 250m
-              memory: 512Mi
+              memory: 256Mi
           volumeMounts:
             - name: n8n-storage
               mountPath: /home/node/.n8n
